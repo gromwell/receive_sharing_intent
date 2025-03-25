@@ -191,30 +191,35 @@ open class RSIShareViewController: SLComposeServiceViewController {
     }
     
     private func redirectToHostApp() {
-        // ids may not loaded yet so we need loadIds here too
+        // Load IDs as they may not be loaded yet
         loadIds()
-        let url = URL(string: "\(kSchemePrefix)-\(hostAppBundleIdentifier):share")
-        var responder = self as UIResponder?
         
-        if #available(iOS 18.0, *) {
-            while responder != nil {
-                if let application = responder as? UIApplication {
-                    application.open(url!, options: [:], completionHandler: nil)
-                }
-                responder = responder?.next
-            }
-        } else {
-            let selectorOpenURL = sel_registerName("openURL:")
-            
-            while (responder != nil) {
-                if (responder?.responds(to: selectorOpenURL))! {
-                    _ = responder?.perform(selectorOpenURL, with: url)
-                }
-                responder = responder!.next
-            }
+        // Create the URL for the host app
+        guard let url = URL(string: "\(kSchemePrefix)-\(hostAppBundleIdentifier):share") else {
+            print("❌ Invalid URL")
+            return
         }
-
-        extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
+        
+        // Try to find a UIApplication responder to open the URL
+        var responder: UIResponder? = self
+        while responder != nil {
+            if let application = responder as? UIApplication {
+                application.open(url, options: [:]) { success in
+                    if success {
+                        print("✅ App opened successfully")
+                        // Complete the extension context only if the app opens successfully
+                        self.extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
+                    } else {
+                        print("❌ Failed to open app")
+                    }
+                }
+                return  // Exit after attempting to open the URL
+            }
+            responder = responder?.next
+        }
+        
+        // Fallback if no UIApplication responder is found
+        print("❌ UIApplication responder not found")
     }
     
     private func dismissWithError() {
