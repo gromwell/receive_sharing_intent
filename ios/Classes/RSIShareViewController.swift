@@ -191,35 +191,21 @@ open class RSIShareViewController: SLComposeServiceViewController {
     }
     
     private func redirectToHostApp() {
-        // Load IDs as they may not be loaded yet
+        // ids may not loaded yet so we need loadIds here too
         loadIds()
+        let url = URL(string: "\(kSchemePrefix)-\(hostAppBundleIdentifier):share")
+        var responder = self as UIResponder?
         
-        // Create the URL for the host app
-        guard let url = URL(string: "\(kSchemePrefix)-\(hostAppBundleIdentifier):share") else {
-            print("❌ Invalid URL")
-            return
-        }
+        let selectorOpenURL = sel_registerName("openURL:")
         
-        // Try to find a UIApplication responder to open the URL
-        var responder: UIResponder? = self
-        while responder != nil {
-            if let application = responder as? UIApplication {
-                application.open(url, options: [:]) { success in
-                    if success {
-                        print("✅ App opened successfully")
-                        // Complete the extension context only if the app opens successfully
-                        self.extensionContext?.completeRequest(returningItems: [], completionHandler: nil)
-                    } else {
-                        print("❌ Failed to open app")
-                    }
-                }
-                return  // Exit after attempting to open the URL
+        while (responder != nil) {
+            if (responder?.responds(to: selectorOpenURL))! {
+                _ = responder?.perform(selectorOpenURL, with: url)
             }
-            responder = responder?.next
+            responder = responder!.next
         }
-        
-        // Fallback if no UIApplication responder is found
-        print("❌ UIApplication responder not found")
+
+        extensionContext!.completeRequest(returningItems: [], completionHandler: nil)
     }
     
     private func dismissWithError() {
