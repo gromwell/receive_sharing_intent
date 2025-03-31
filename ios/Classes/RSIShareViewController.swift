@@ -193,7 +193,7 @@ open class RSIShareViewController: SLComposeServiceViewController {
     private func redirectToHostApp() {
         // ids may not loaded yet so we need loadIds here too
         loadIds()
-        let url = URL(string: "\(kSchemePrefix)-\(hostAppBundleIdentifier):share")
+        let url = URL(string: "\(hostAppBundleIdentifier):share")
         var responder = self as UIResponder?
         
         if #available(iOS 18.0, *) {
