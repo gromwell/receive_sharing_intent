@@ -197,11 +197,11 @@ open class RSIShareViewController: SLComposeServiceViewController {
         var responder = self as UIResponder?
         
         if #available(iOS 18.0, *) {
-            while (responder != nil) {
+            while responder != nil {
                 if let application = responder as? UIApplication {
-                    application.open(url!)
+                    application.open(url!, options: [:], completionHandler: nil)
                 }
-                responder = responder!.next
+                responder = responder?.next
             }
         } else {
             let selectorOpenURL = sel_registerName("openURL:")
